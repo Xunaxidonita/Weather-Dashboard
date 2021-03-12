@@ -1,6 +1,6 @@
 const WEATHER_URL = "http://api.openweathermap.org/data/2.5/weather?q=";
 const FORECAST_URL = "http://api.openweathermap.org/data/2.5/forecast?q=";
-const UV_INDEX_URL = "http://api.openweathermap.org/data/2.5/uvi/forecast?lat=";
+const UV_INDEX_URL = "http://api.openweathermap.org/data/2.5/uvi?lat=";
 const API_KEY = "0564c081313fe54741f1983cf3dea38c";
 const ICON_URL = "http://openweathermap.org/img/wn/";
 
@@ -30,7 +30,7 @@ var genWeatherApiUrl = function (city) {
   return url;
 };
 
-var genForecastUrl = function () {
+var genForecastUrl = function (city) {
   let url = `${FORECAST_URL}${city}&appid=${API_KEY}&units=imperial`;
   return url;
 };
@@ -60,6 +60,10 @@ var renderForm = (cityList, currentCity) => {
   var cityToSearch = document.getElementById("cityname");
 
   form.addEventListener("click", (btn) => {
+    if (cityToSearch.value === "") {
+      alert("Enter a city");
+      return;
+    }
     let cityName = cityToSearch.value;
     currentCity.name = cityName;
     goFetch(currentCity, cityList);
@@ -68,15 +72,15 @@ var renderForm = (cityList, currentCity) => {
 
 var getUVClass = function () {
   let uvClass;
-  if (uvIndex[0].value < 2.6) {
+  if (uvIndex.value < 2.6) {
     uvClass = "green";
-  } else if (uvIndex[0].value < 5.6) {
+  } else if (uvIndex.value < 5.6) {
     uvClass = "yellow";
-  } else if (uvIndex[0].value < 7.6) {
+  } else if (uvIndex.value < 7.6) {
     uvClass = "orange";
-  } else if (uvIndex[0].value < 10.6) {
+  } else if (uvIndex.value < 10.6) {
     uvClass = "red";
-  } else if (uvIndex[0].value >= 10.6) {
+  } else if (uvIndex.value >= 10.6) {
     uvClass = "purple";
   }
   return uvClass;
@@ -108,7 +112,7 @@ var goFetch = function (currentCity, cityList) {
       var myCityWeather = response;
       console.log(myCityWeather);
       debugger;
-      getCurrentCity(myCityWeather);
+      currentCity.weather = myCityWeather;
       let lat = myCityWeather.coord.lat;
       let lon = myCityWeather.coord.lon;
       let url = genUvIndexUrl(lat, lon);
@@ -118,7 +122,7 @@ var goFetch = function (currentCity, cityList) {
         })
         .then(function (response) {
           var uvInd = response;
-          getUVIndex(uvInd);
+          currentCity.uvIndex = uvInd;
           renderWeatherNow();
         });
     });
@@ -129,7 +133,7 @@ var goFetch = function (currentCity, cityList) {
     })
     .then(function (response) {
       var fiveDaysForecast = response;
-      getCurrentForecast(fiveDaysForecast);
+      currentCity.forecast = fiveDaysForecast;
       renderFiveDays();
     });
 };
@@ -150,7 +154,7 @@ var addCity = function (city) {
 
 var renderCitiesList = function () {
   const FAV_CITIES = document.getElementById("cities");
-  //FAV_CITIES.innerHTML = "";
+  FAV_CITIES.innerHTML = "";
   let myList = localStorage.getItem("citiesList");
   if (myList !== null) {
     var favCities = JSON.parse(myList);
@@ -170,7 +174,8 @@ var generateCitiesList = function (myList) {
 
 var renderWeatherNow = function () {
   var $container = document.getElementById("weather-now");
-  let weatherNow = currentCity;
+  debugger;
+  let weatherNow = state.currentCity.weather;
   let data = generateWeatherNow(weatherNow);
   for (i = 0; i < data.length; i++) {
     let newDiv = document.createElement("div");
@@ -182,27 +187,27 @@ var renderWeatherNow = function () {
 var generateWeatherNow = function (city) {
   let $title = document.createElement("h2");
   var dateString = moment(city.dt).calendar();
-  let icon = city.weather[1].icon;
+  let icon = city.weather[0].icon;
   let $img = document.createElement("img");
-  let imgUrl = "http://openweathermap.org/img/wn/" + icon + "@2x.png";
+  let imgUrl = genIconUrl(icon);
   $img.setAttribute("src", imgUrl);
   $img.setAttribute("style", "display: In-line;");
   var title = city.name + "  " + dateString + "   ";
-  $title.textContent(title);
+  $title.textContent = title;
   let $temp = document.createElement("p");
   var temp = "Temperature: " + city.main.temp;
-  $temp.textContent(temp);
+  $temp.textContent = temp;
   let $humid = document.createElement("p");
   var humid = "Humidity: " + city.main.humidity;
-  $humid.textContent(humid);
+  $humid.textContent = humid;
   var wind = "Wind Speed: " + city.wind.speed + " MPH";
   var $wind = document.createElement("p");
-  $wind.textContent(wind);
+  $wind.textContent = wind;
   var uvInd = "UV Index: ";
   let $uvInd = document.createElement("p");
-  $uvInd.textContent(uvInd);
+  $uvInd.textContent = uvInd;
   let $span = document.createElement("span");
-  $span.textContent(uvIndex[1].value);
+  $span.textContent = state.currentCity.uvIndex.value;
   let spanClass = getUVClass();
   $span.setAttribute("class", "with-bg");
   $span.setAttribute("class", spanClass);
@@ -215,9 +220,9 @@ var renderFiveDays = function () {
   let forecast = document.getElementById("weather-five");
   let wrapper = document.createElement("div");
   let title = document.createElement("h3");
-  title.textContent("5-Day Forecast ");
+  title.textContent = "5-Day Forecast ";
   wrapper.appendChild(title);
-  let forecastCity = currentForecast;
+  let forecastCity = state.currentCity.forecast;
   for (let i = 4; i < forecastCity.list.length; i = i + 8) {
     let dayForcast = forecastCity.list[i];
     generateFiveDays(dayForcast);
@@ -228,15 +233,17 @@ var renderFiveDays = function () {
 var generateFiveDays = function (forecast) {
   let $divPerDay = document.createElement("div");
   $divPerDay.setAttribute("class", "bubble");
-  let date = forecast.dt_txt;
-  let $date = document.createElement("h4");
-  $date.textContent(date);
+  let date = moment(forecast.dt).calendar();
+  let $date = document.createElement("h5");
+  $date.textContent = date;
   //var dateString = moment().calendar();
-  let icon = forecast.weather.icon;
-  let iconUrl = "http://openweathermap.org/img/wn/" + icon + "@2x.png";
+  let icon = forecast.weather[0].icon;
+  let iconUrl = genIconUrl(icon);
   let $icon = document.createElement("img");
   $icon.setAttribute("src", iconUrl);
   let temp = forecast.main.temp;
+  let $temp = document.createElement("p");
+  $temp.textContent = "Temp: " + temp + "F";
   let humid = forecast.main.humidity;
 };
 
