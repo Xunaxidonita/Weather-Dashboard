@@ -16,11 +16,14 @@
       <h1>Weather Dashboard</h1>
     </header>
     <main>
-      <div class="container">
-        <div class="col-4">
+      <div
+        class="container d-flex align-items-start bg-light mb-2"
+        style="height: 100px"
+      >
+        <div class="col-4 m-0 sidebar">
           <h3>Search for a City:</h3>
           <form action="" class="city" id="search-word">
-            <input type="text" name="cityname" id="cityname" />
+            <input type="text" name="cityname" id="cityname" class="short" />
             <button class="search" id="search" type="button">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -38,8 +41,8 @@
           </form>
           <div id="cities"></div>
         </div>
-        <div class="col-8">
-          <div class="row" id="weather-now"></div>
+        <div class="col-8 right-col">
+          <div class="row main-weather" id="weather-now"></div>
           <div class="row" id="weather-five"></div>
         </div>
       </div>

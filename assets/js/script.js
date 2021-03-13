@@ -70,17 +70,17 @@ var renderForm = (cityList, currentCity) => {
   });
 };
 
-var getUVClass = function () {
+var getUVClass = function (uv) {
   let uvClass;
-  if (uvIndex.value < 2.6) {
+  if (uv < 2.6) {
     uvClass = "green";
-  } else if (uvIndex.value < 5.6) {
+  } else if (uv < 5.6) {
     uvClass = "yellow";
-  } else if (uvIndex.value < 7.6) {
+  } else if (uv < 7.6) {
     uvClass = "orange";
-  } else if (uvIndex.value < 10.6) {
+  } else if (uv < 10.6) {
     uvClass = "red";
-  } else if (uvIndex.value >= 10.6) {
+  } else if (uv >= 10.6) {
     uvClass = "purple";
   }
   return uvClass;
@@ -102,7 +102,6 @@ var goFetch = function (currentCity, cityList) {
   let cities = JSON.stringify(cityList);
   localStorage.setItem("citiesList", cities);
   var apiRequest1 = genWeatherApiUrl(city);
-  console.log(apiRequest1);
   renderCitiesList(cityList);
   fetch(apiRequest1)
     .then(function (response) {
@@ -110,8 +109,6 @@ var goFetch = function (currentCity, cityList) {
     })
     .then(function (response) {
       var myCityWeather = response;
-      console.log(myCityWeather);
-      debugger;
       currentCity.weather = myCityWeather;
       let lat = myCityWeather.coord.lat;
       let lon = myCityWeather.coord.lon;
@@ -145,8 +142,8 @@ var addCity = function (city) {
   $name.textContent = city.toProperCase();
   $name.setAttribute("class", "city-button");
   $name.addEventListener("click", (btn) => {
-    var favCity = city;
-    goFetch(favCity);
+    state.currentCity.name = city;
+    goFetch(state.currentCity, state.cityList);
   });
   newCity.appendChild($name);
   return newCity;
@@ -174,7 +171,7 @@ var generateCitiesList = function (myList) {
 
 var renderWeatherNow = function () {
   var $container = document.getElementById("weather-now");
-  debugger;
+  $container.innerHTML = "";
   let weatherNow = state.currentCity.weather;
   let data = generateWeatherNow(weatherNow);
   for (i = 0; i < data.length; i++) {
@@ -185,17 +182,21 @@ var renderWeatherNow = function () {
 };
 
 var generateWeatherNow = function (city) {
+  let $bar = document.createElement("div");
   let $title = document.createElement("h2");
+  $title.setAttribute("style", "display: inline");
   var dateString = moment(city.dt).calendar();
   let icon = city.weather[0].icon;
   let $img = document.createElement("img");
   let imgUrl = genIconUrl(icon);
   $img.setAttribute("src", imgUrl);
-  $img.setAttribute("style", "display: In-line;");
+  $img.setAttribute("style", "display: inline;");
   var title = city.name + "  " + dateString + "   ";
   $title.textContent = title;
+  $bar.appendChild($title);
+  $bar.appendChild($img);
   let $temp = document.createElement("p");
-  var temp = "Temperature: " + city.main.temp;
+  var temp = "Temperature: " + city.main.temp + " ºF";
   $temp.textContent = temp;
   let $humid = document.createElement("p");
   var humid = "Humidity: " + city.main.humidity;
@@ -207,44 +208,56 @@ var generateWeatherNow = function (city) {
   let $uvInd = document.createElement("p");
   $uvInd.textContent = uvInd;
   let $span = document.createElement("span");
-  $span.textContent = state.currentCity.uvIndex.value;
-  let spanClass = getUVClass();
+  let uv = state.currentCity.uvIndex.value;
+  $span.textContent = uv;
+  let spanClass = getUVClass(uv);
   $span.setAttribute("class", "with-bg");
   $span.setAttribute("class", spanClass);
-  uvInd.appendChild($span);
-  let currentData = [$title, $temp, $humid, $wind, $uvInd];
+  $uvInd.appendChild($span);
+  let currentData = [$bar, $temp, $humid, $wind, $uvInd];
   return currentData;
 };
 
 var renderFiveDays = function () {
   let forecast = document.getElementById("weather-five");
-  let wrapper = document.createElement("div");
+  forecast.innerHTML = "";
   let title = document.createElement("h3");
+  let wrapper = document.createElement("div");
+  wrapper.setAttribute("class", "d-flex align-items-start mb-5");
+  wrapper.setAttribute("style", "height: 100px;");
   title.textContent = "5-Day Forecast ";
-  wrapper.appendChild(title);
+  title.setAttribute("style", "display: block;");
+  forecast.appendChild(title);
   let forecastCity = state.currentCity.forecast;
   for (let i = 4; i < forecastCity.list.length; i = i + 8) {
     let dayForcast = forecastCity.list[i];
-    generateFiveDays(dayForcast);
-    wrapper.appendChild(dayForcast);
+    let forecastEls = generateFiveDays(dayForcast);
+    wrapper.appendChild(forecastEls);
   }
+  forecast.appendChild(wrapper);
 };
 
 var generateFiveDays = function (forecast) {
   let $divPerDay = document.createElement("div");
-  $divPerDay.setAttribute("class", "bubble");
+  $divPerDay.setAttribute("class", "col-2 m-2 bubble");
   let date = moment(forecast.dt).calendar();
-  let $date = document.createElement("h5");
+  let $date = document.createElement("h6");
   $date.textContent = date;
   //var dateString = moment().calendar();
   let icon = forecast.weather[0].icon;
   let iconUrl = genIconUrl(icon);
   let $icon = document.createElement("img");
   $icon.setAttribute("src", iconUrl);
+  $icon.setAttribute("class", "little");
   let temp = forecast.main.temp;
   let $temp = document.createElement("p");
-  $temp.textContent = "Temp: " + temp + "F";
+  $temp.textContent = "Temp: " + temp + " ºF";
   let humid = forecast.main.humidity;
+  let $humid = document.createElement("p");
+  $humid.textContent = "Humidity: " + humid + "%";
+  let elements = [$date, $icon, $temp, $humid];
+  elements.forEach((element) => $divPerDay.appendChild(element));
+  return $divPerDay;
 };
 
 renderPage();

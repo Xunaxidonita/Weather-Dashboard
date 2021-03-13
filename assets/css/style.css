@@ -3,6 +3,12 @@
   padding: 0;
   box-sizing: border-box;
 }
+main {
+  display: flex;
+  align-content: center;
+  width: 95%;
+  margin: 0 auto 0 auto;
+}
 
 header {
   height: 85px;
@@ -12,12 +18,8 @@ header {
   margin-bottom: 65px;
 }
 
-main {
-  width: 85%;
-}
-
-.container {
-  width: 85%;
+.sidebar h3 {
+  margin-top: 35px;
 }
 
 .search {
@@ -30,6 +32,22 @@ main {
   border: none;
   border-radius: 4px;
 }
+
+.righ-col {
+  margin-left: 45px;
+  padding-left: 45px;
+}
+
+.main-weather {
+  display: block;
+  background-color: white;
+  margin-bottom: 20px;
+}
+
+.main-weather p {
+  font-size: 24px;
+}
+
 .city input {
   font-size: 16px;
   line-height: 1.6;
@@ -49,8 +67,60 @@ main {
   border: 1px, solid, #999;
 }
 
-#seacrh-word {
+.cities {
+  width: 90%;
+}
+
+#search-word {
   display: inline-block;
+}
+
+.green {
+  background-color: green;
+  border-radius: 12px;
+  color: white;
+  padding: 10px;
+}
+
+.yellow {
+  background-color: yellow;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.orange {
+  background-color: orange;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.red {
+  background-color: red;
+  border-radius: 12px;
+  color: white;
+  padding: 10px;
+}
+
+.purple {
+  background-color: purple;
+  border-radius: 12px;
+  color: white;
+  padding: 10px;
+}
+
+.bubble {
+  padding-top: 12px;
+  background-color: #192ff5;
+  color: white;
+  border-radius: 12px;
+}
+
+.little {
+  width: 40px;
+}
+
+.weather-five {
+  margin-top: 20px;
 }
 
 #cities {
