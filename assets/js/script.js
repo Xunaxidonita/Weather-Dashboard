@@ -56,17 +56,19 @@ String.prototype.toProperCase = function () {
 };
 
 var renderForm = (cityList, currentCity) => {
-  var form = document.getElementById("search");
+  var form = document.getElementById("search-word");
   var cityToSearch = document.getElementById("cityname");
 
-  form.addEventListener("click", (btn) => {
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
     if (cityToSearch.value === "") {
       alert("Enter a city");
       return;
     }
     let cityName = cityToSearch.value;
     currentCity.name = cityName;
-    goFetch(currentCity, cityList);
+    goFetch(currentCity, cityList, true);
+    return false;
   });
 };
 
@@ -92,7 +94,7 @@ var repetitionAvoider = function (city, cityList) {
   }
 };
 
-var goFetch = function (currentCity, cityList) {
+var goFetch = function (currentCity, cityList, rerenderList) {
   let city = currentCity.name;
   if (cityList.length > 0) {
     repetitionAvoider(city.toLowerCase(), cityList);
@@ -102,7 +104,9 @@ var goFetch = function (currentCity, cityList) {
   let cities = JSON.stringify(cityList);
   localStorage.setItem("citiesList", cities);
   var apiRequest1 = genWeatherApiUrl(city);
-  renderCitiesList(cityList);
+  if (rerenderList) {
+    renderCitiesList(cityList);
+  }
   fetch(apiRequest1)
     .then(function (response) {
       return response.json();
@@ -136,17 +140,26 @@ var goFetch = function (currentCity, cityList) {
 };
 
 var addCity = function (city) {
-  var newCity = document.createElement("div");
-  newCity.setAttribute("class", "fav-city");
   var $name = document.createElement("button");
   $name.textContent = city.toProperCase();
-  $name.setAttribute("class", "city-button");
+  $name.setAttribute(
+    "class",
+    "list-group-item list-group-item-action secondary"
+  );
+  $name.setAttribute("type", "button");
+  $name.setAttribute("data-bs-toggle", "list");
+
   $name.addEventListener("click", (btn) => {
     state.currentCity.name = city;
     goFetch(state.currentCity, state.cityList);
   });
-  newCity.appendChild($name);
-  return newCity;
+  if (city === state.currentCity?.name?.toLowerCase()) {
+    $name.setAttribute(
+      "class",
+      "list-group-item list-group-item-action secondary active"
+    );
+  }
+  return $name;
 };
 
 var renderCitiesList = function () {
@@ -184,35 +197,36 @@ var renderWeatherNow = function () {
 var generateWeatherNow = function (city) {
   let $bar = document.createElement("div");
   let $title = document.createElement("h2");
-  $title.setAttribute("style", "display: inline");
-  var dateString = moment(city.dt).calendar();
+  var dateString = moment.unix(city.dt).calendar();
+  var imgWrap = document.createElement("div");
+  imgWrap.setAttribute("class", "shadow p-0 rounded float-end bg-info");
   let icon = city.weather[0].icon;
   let $img = document.createElement("img");
   let imgUrl = genIconUrl(icon);
   $img.setAttribute("src", imgUrl);
-  $img.setAttribute("style", "display: inline;");
+  $img.setAttribute("class", "little");
+  imgWrap.appendChild($img);
   var title = city.name + "  " + dateString + "   ";
   $title.textContent = title;
   $bar.appendChild($title);
-  $bar.appendChild($img);
+  $bar.appendChild(imgWrap);
   let $temp = document.createElement("p");
-  var temp = "Temperature: " + city.main.temp + " ºF";
+  var temp = "Temperature : " + city.main.temp + " ºF";
   $temp.textContent = temp;
   let $humid = document.createElement("p");
-  var humid = "Humidity: " + city.main.humidity;
+  var humid = "Humidity : " + city.main.humidity;
   $humid.textContent = humid;
-  var wind = "Wind Speed: " + city.wind.speed + " MPH";
+  var wind = "Wind Speed : " + city.wind.speed + " MPH";
   var $wind = document.createElement("p");
   $wind.textContent = wind;
-  var uvInd = "UV Index: ";
+  var uvInd = "UV Index : ";
   let $uvInd = document.createElement("p");
   $uvInd.textContent = uvInd;
   let $span = document.createElement("span");
   let uv = state.currentCity.uvIndex.value;
   $span.textContent = uv;
   let spanClass = getUVClass(uv);
-  $span.setAttribute("class", "with-bg");
-  $span.setAttribute("class", spanClass);
+  $span.setAttribute("class", `badge rounded-pill ${spanClass}`);
   $uvInd.appendChild($span);
   let currentData = [$bar, $temp, $humid, $wind, $uvInd];
   return currentData;
@@ -223,10 +237,8 @@ var renderFiveDays = function () {
   forecast.innerHTML = "";
   let title = document.createElement("h3");
   let wrapper = document.createElement("div");
-  wrapper.setAttribute("class", "d-flex align-items-start mb-5");
-  wrapper.setAttribute("style", "height: 100px;");
+  wrapper.setAttribute("class", "card-group d-flex align-items-start mb-5");
   title.textContent = "5-Day Forecast ";
-  title.setAttribute("style", "display: block;");
   forecast.appendChild(title);
   let forecastCity = state.currentCity.forecast;
   for (let i = 4; i < forecastCity.list.length; i = i + 8) {
@@ -239,9 +251,13 @@ var renderFiveDays = function () {
 
 var generateFiveDays = function (forecast) {
   let $divPerDay = document.createElement("div");
-  $divPerDay.setAttribute("class", "col-2 m-2 bubble");
-  let date = moment(forecast.dt).calendar();
+  $divPerDay.setAttribute(
+    "class",
+    "card text-white bg-primary m-3 rounded p-3"
+  );
+  let date = moment.unix(forecast.dt).format("MMM Do YY");
   let $date = document.createElement("h6");
+  $date.setAttribute("class", "text-end fw-bolder");
   $date.textContent = date;
   //var dateString = moment().calendar();
   let icon = forecast.weather[0].icon;
@@ -251,10 +267,10 @@ var generateFiveDays = function (forecast) {
   $icon.setAttribute("class", "little");
   let temp = forecast.main.temp;
   let $temp = document.createElement("p");
-  $temp.textContent = "Temp: " + temp + " ºF";
+  $temp.textContent = "Temp :    " + temp + "ºF";
   let humid = forecast.main.humidity;
   let $humid = document.createElement("p");
-  $humid.textContent = "Humidity: " + humid + "%";
+  $humid.textContent = "Humidity : " + humid + "%";
   let elements = [$date, $icon, $temp, $humid];
   elements.forEach((element) => $divPerDay.appendChild(element));
   return $divPerDay;
