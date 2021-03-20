@@ -1,8 +1,8 @@
-const WEATHER_URL = "http://api.openweathermap.org/data/2.5/weather?q=";
-const FORECAST_URL = "http://api.openweathermap.org/data/2.5/forecast?q=";
-const UV_INDEX_URL = "http://api.openweathermap.org/data/2.5/uvi?lat=";
+const WEATHER_URL = "https://api.openweathermap.org/data/2.5/weather?q=";
+const FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast?q=";
+const UV_INDEX_URL = "https://api.openweathermap.org/data/2.5/uvi?lat=";
 const API_KEY = "0564c081313fe54741f1983cf3dea38c";
-const ICON_URL = "http://openweathermap.org/img/wn/";
+const ICON_URL = "https://openweathermap.org/img/wn/";
 
 var recoverCityList = () => {
   let myList = localStorage.getItem("citiesList");
